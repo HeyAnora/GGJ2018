@@ -2,10 +2,19 @@
 using System.Collections.Generic;
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class DialogueController : MonoBehaviour
 {
+    [Serializable]
+    public class Statement
+    {
+        public AudioClip clip;
+        public string transcript;
+        public StatementTime[] timings;
+    }
+
     //[Serializable]
     public class StatementTime
     {
@@ -13,7 +22,25 @@ public class DialogueController : MonoBehaviour
         public float outro;
     }
 
-    public List<StatementTime> DataList;
+    [Serializable]
+    public class SpeechEvent
+    {
+        public float delay;
+        public UnityEvent action;
+    }
+
+    public List<Statement> statementList;
+
+    public SpeechEvent[] eventSchedule;
+
+    public Statement currentStatement;
+    private AudioManager audioManager;
+    private Censor censor;
+
+    public bool playingStatement = false;
+
+    [SerializeField]
+    private Text transcript;
 
     private void Awake()
     {
@@ -28,29 +55,68 @@ public class DialogueController : MonoBehaviour
 
     private void InitiateData()
     {
+        int num = 0; 
         string dialogueText = GetDialogueData();
         string[] list = dialogueText.Split("\n"[0]);
 
         foreach (string line in list)
         {
-            string[] split = line.Split('/');
-            float introTime = float.Parse(split[0].Trim());
-            float outroTime = float.Parse(split[1].Trim());
-
-            StatementTime newStatement = new StatementTime()
+            List<StatementTime> DataList = new List<StatementTime>();
+            string[] split = line.Split(';');
+            foreach (string part in split)
             {
-                intro = introTime,
-                outro = outroTime
-            };
+                if (part != "")
+                {
+                    string[] segment = part.Split('/');
+                    float introTime = float.Parse(segment[0].Trim());
+                    float outroTime = float.Parse(segment[1].Trim());
 
-            DataList.Add(newStatement);
+                    StatementTime newStatementTime = new StatementTime()
+                    {
+                        intro = introTime,
+                        outro = outroTime
+                    };
+
+                    DataList.Add(newStatementTime);
+                }
+
+            }
+            statementList[num].timings = DataList.ToArray();
+            num++;
         }
-
     }
 
-    ///TO DO: 
-    ///add way to check list timings
-    ///check for each set of timings at a time, after one is checked begin chekcing next one
+    private void Start()
+    {
+        audioManager = GetComponent<AudioManager>();
+        speechCoroutine = StartCoroutine(Speech());
+        censor = GetComponent<Censor>();
+    }
 
+    public void PlayStatement(int num)
+    {
+        playingStatement = true;
+        currentStatement = statementList[num];
+        audioManager.PlaceSpeech(currentStatement.clip);
+        transcript.text = currentStatement.transcript;
+    }
 
+    public void PlayApplause()
+    {
+        currentStatement.clip = null;
+        audioManager.PlayApplause();
+    }
+
+    private Coroutine speechCoroutine;
+    private IEnumerator Speech()
+    {
+        for (int i = 0; i < eventSchedule.Length; i++)
+        {
+            yield return new WaitForSeconds(eventSchedule[i].delay);
+            eventSchedule[i].action.Invoke();
+            while (audioManager.main.isPlaying)
+                yield return null;
+            playingStatement = false;
+        }
+    }
 }

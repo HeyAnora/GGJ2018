@@ -5,6 +5,8 @@ public class Censor : MonoBehaviour
 {
     private DialogueController dialogueController;
     private AudioManager audioManager;
+    [SerializeField]
+    private MeterController meterController;
 
     [SerializeField]
     private GameObject staticImage;

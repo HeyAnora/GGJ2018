@@ -35,6 +35,8 @@ public class DialogueController : MonoBehaviour
 
     public Statement currentStatement;
     private AudioManager audioManager;
+    [SerializeField]
+    private PresidentController president;
     private Censor censor;
 
     public bool playingStatement = false;
@@ -98,6 +100,7 @@ public class DialogueController : MonoBehaviour
         playingStatement = true;
         currentStatement = statementList[num];
         audioManager.PlaceSpeech(currentStatement.clip);
+        president.StartTalking();
         transcript.text = currentStatement.transcript;
     }
 
@@ -116,6 +119,7 @@ public class DialogueController : MonoBehaviour
             eventSchedule[i].action.Invoke();
             while (audioManager.main.isPlaying)
                 yield return null;
+            president.StopTalking();
             playingStatement = false;
         }
     }

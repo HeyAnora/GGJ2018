@@ -225,8 +225,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   signalRect: {fileID: 1822079315}
   threatRect: {fileID: 1754110216}
-  threatPointChange: 0
-  signalPointChange: 0
+  signalPoints: 100
+  threatPointChange: 0.1
+  signalPointChange: 1
+  censor: {fileID: 1181599046}
 --- !u!1 &259174131
 GameObject:
   m_ObjectHideFlags: 0

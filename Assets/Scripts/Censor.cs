@@ -10,6 +10,8 @@ public class Censor : MonoBehaviour
 
     [SerializeField]
     private GameObject staticImage;
+
+    private bool censorEnabled = true;
     // Use this for initialization
     void Start ()
     {
@@ -20,14 +22,18 @@ public class Censor : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        CensorCheck();
-        if (Input.GetKey("space"))
+        if (censorEnabled)
         {
-            staticImage.SetActive(true);
-            if (!audioManager.tvStatic.isPlaying)
-                audioManager.tvStatic.Play();
-            audioManager.main.mute = true;
+            CensorCheck();
+            if (Input.GetKey("space"))
+            {
+                staticImage.SetActive(true);
+                if (!audioManager.tvStatic.isPlaying)
+                    audioManager.tvStatic.Play();
+                audioManager.main.mute = true;
+            }
         }
+
         if (Input.GetKeyUp("space"))
         {
             staticImage.SetActive(false);
@@ -46,23 +52,28 @@ public class Censor : MonoBehaviour
                 if (audioManager.main.time > timing.intro && audioManager.main.time < timing.outro)
                 {
                     if (Input.GetKey("space"))
-                        AddPoints(true);
+                        meterController.ChangeThreat(false);
                     else
-                        AddPoints( false);
+                        meterController.ChangeThreat(true);
                 }
-                else if (Input.GetKey("space"))
-                    AddPoints(false);
+                //else if (Input.GetKey("space"))
+                //    meterController.ChangeThreat(true);
             }
         }
-        else if (Input.GetKey("space"))
-            AddPoints(false);
+        //else if (Input.GetKey("space"))
+        //    meterController.ChangeThreat(true);
     }
 
-    private void AddPoints(bool check)
+    public void EnableCensor()
     {
-        if (check)
-            Debug.Log(audioManager.main.time + "Points++");
-        else
-            Debug.Log(audioManager.main.time + "Points--");
+        censorEnabled = true;
+    }
+
+    public void DisableCensor()
+    {
+        censorEnabled = false;
+        staticImage.SetActive(false);
+        audioManager.tvStatic.Stop();
+        audioManager.main.mute = false;
     }
 }
